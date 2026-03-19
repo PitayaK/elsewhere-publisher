@@ -112,11 +112,36 @@ From the article content in the conversation, extract:
 - Remove source document artifacts (Feishu/Word metadata)
 - Clean paragraph separation (double newline)
 
-### Step 4: Generate a slug
+### Step 4: Upload images
+
+If the article contains images (either as external URLs or local files), upload each one first to get permanent URLs.
+
+**Upload from URL** (for images from WeChat, Feishu, etc.):
+
+```bash
+curl -s -X POST "https://elsewhere.news/api/upload" \
+  -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/image.jpg"}' | python3 -m json.tool
+```
+
+**Upload local file**:
+
+```bash
+curl -s -X POST "https://elsewhere.news/api/upload" \
+  -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
+  -F "file=@/path/to/image.jpg" | python3 -m json.tool
+```
+
+Both return `{"url": "https://...public-url...", "path": "..."}`.
+
+Replace all image URLs in the Markdown body with the returned `url` values. Use the first uploaded image as `cover_image_url` if no cover is specified.
+
+### Step 5: Generate a slug
 
 URL-friendly, lowercase, hyphenated. Use English title if available, otherwise romanize Chinese.
 
-### Step 5: Publish article
+### Step 6: Publish article
 
 Write JSON payload to temp file:
 
@@ -126,7 +151,8 @@ cat > /tmp/article.json << 'JSONEOF'
   "title_zh": "中文标题",
   "slug": "the-slug",
   "excerpt_zh": "中文摘要",
-  "body_zh": "Full article body in Markdown"
+  "body_zh": "Full article body in Markdown",
+  "cover_image_url": "https://...uploaded-cover-url..."
 }
 JSONEOF
 ```
@@ -140,7 +166,7 @@ curl -s -X POST "https://elsewhere.news/api/articles" \
   -d @/tmp/article.json | python3 -m json.tool
 ```
 
-### Step 6: Confirm
+### Step 7: Confirm
 
 Tell the user: article title, and that it has been published.
 
