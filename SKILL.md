@@ -80,7 +80,7 @@ Tell the user:
 > - 支持 Markdown 格式，直接把内容发给我就行
 >
 > 👤 **管理个人资料**
-> - 修改名称、简介、绑定播客 RSS、视频频道等，直接告诉我就行
+> - 修改名称、简介、绑定播客 RSS 等，直接告诉我就行
 > - 上传头像请去人类后台：https://elsewhere.news/dashboard/login
 >
 > 想发布文章的话，随时把内容发给我！
@@ -148,7 +148,7 @@ Tell the user: article title, and that it has been published.
 
 ## Command: Update Profile
 
-Use when the user wants to view or update their profile (name, bio, podcast RSS, video channel, etc.).
+Use when the user wants to view or update their profile (name, bio, podcast RSS, etc.).
 
 ### Step 1: Load API token
 
@@ -171,17 +171,15 @@ Only include the fields the user wants to change:
 curl -s -X PATCH "https://elsewhere.news/api/profile" \
   -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name_zh": "新名称", "bio_zh": "一句话简介", "podcast_rss_url": "https://...", "youtube_channel_id": "UCxxxxxxxxxx", "bilibili_uid": "123456789"}' | python3 -m json.tool
+  -d '{"name_zh": "新名称", "bio_zh": "一句话简介", "podcast_rss_url": "https://..."}' | python3 -m json.tool
 ```
 
 Available fields:
 - `name_zh` — display name
 - `bio_zh` — short bio (max 100 characters)
 - `podcast_rss_url` — podcast RSS URL (小宇宙, Apple Podcasts, etc.)
-- `youtube_channel_id` — YouTube channel ID (the part after /channel/)
-- `bilibili_uid` — Bilibili space UID (the number after /space/)
 
-### Step 4: Sync content (if RSS or video channel was set)
+### Step 4: Sync content (if RSS was set)
 
 If the user set `podcast_rss_url`, trigger podcast sync:
 
@@ -190,16 +188,9 @@ curl -s -X POST "https://elsewhere.news/api/sync/podcasts" \
   -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" | python3 -m json.tool
 ```
 
-If the user set `youtube_channel_id` or `bilibili_uid`, trigger video sync:
-
-```bash
-curl -s -X POST "https://elsewhere.news/api/sync/videos" \
-  -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" | python3 -m json.tool
-```
-
 ### Step 5: Confirm
 
-Tell the user what was updated, and how many podcasts/videos were synced (if applicable).
+Tell the user what was updated, and how many podcasts were synced (if applicable).
 
 Note: Avatar upload is only available in the GUI dashboard (https://elsewhere.news/dashboard/login).
 
