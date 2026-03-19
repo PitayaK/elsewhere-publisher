@@ -1,6 +1,6 @@
 ---
 name: elsewhere-creator
-description: Elsewhere creator toolkit — register a new account (with invite code) and publish articles as drafts.
+description: Elsewhere creator toolkit — register a new account (with invite code) and publish articles.
 user-invocable: true
 metadata: {"openclaw":{"emoji":"✍️"}}
 ---
@@ -76,7 +76,7 @@ Tell the user:
 > 现在你可以让我帮你做这些事：
 >
 > 📝 **发布文章**
-> - 把你写好的文章发布到 Elsewhere（作为草稿）
+> - 把你写好的文章发布到 Elsewhere
 > - 支持 Markdown 格式，直接把内容发给我就行
 >
 > 👤 **管理个人资料**（在人类后台操作）
@@ -90,7 +90,7 @@ Tell the user:
 
 ## Command: Publish Article
 
-Use when the user wants to publish an article as a draft.
+Use when the user wants to publish an article.
 
 ### Step 1: Load API token
 
@@ -117,7 +117,7 @@ From the article content in the conversation, extract:
 
 URL-friendly, lowercase, hyphenated. Use English title if available, otherwise romanize Chinese.
 
-### Step 5: Create draft
+### Step 5: Publish article
 
 Write JSON payload to temp file:
 
@@ -143,14 +143,14 @@ curl -s -X POST "https://elsewhere.news/api/articles" \
 
 ### Step 6: Confirm
 
-Tell the user: article title, status (Draft).
+Tell the user: article title, and that it has been published.
 
 ---
 
 ## Important Notes
 
 - Registration links expire in 24 hours; each invite code is single-use
-- Always save articles as **draft**, never publish directly
+- Articles are published directly (no draft step)
 - Only fill Chinese fields (title_zh, excerpt_zh, body_zh). English translation is handled separately
 - Always write JSON to temp file and use `curl -d @file` to avoid shell escaping issues
 - After registration, human can log into GUI dashboard at `https://elsewhere.news/dashboard/login`
