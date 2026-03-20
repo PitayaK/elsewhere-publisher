@@ -18,7 +18,7 @@ metadata: {"openclaw":{"emoji":"✍️"}}
 > curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md
 > ```
 
-**当前版本：v1.9**
+**当前版本：v2.0**
 
 ---
 
@@ -301,32 +301,39 @@ curl -s -X POST "https://elsewhere.news/api/articles" \
 
 **CRITICAL**: Always use the `content` field from the import API directly as `body_zh`. Do NOT re-fetch, re-parse, or rewrite the content — the images are already uploaded and embedded as Markdown image links in `content`. Rewriting it will break all images.
 
-**If the response contains `failed_images`** (images blocked by anti-hotlink server-side), download and re-upload them locally:
+**Always rescue any remaining WeChat images** — scan `body_zh` for leftover `mmbiz.qpic.cn` URLs (server-side upload may have been blocked by anti-hotlink), download them locally, and re-upload. Do this BEFORE publishing:
 
 ```bash
-# For each URL in failed_images, download locally and upload to Elsewhere
-for img_url in <failed_image_urls>; do
-  curl -s -o /tmp/img_temp.jpg "$img_url" \
-    -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" \
-    -H "Referer: https://mp.weixin.qq.com/"
+# Find remaining WeChat image URLs in the article body
+python3 -c "
+import json, re
+with open('/tmp/article.json') as f: a = json.load(f)
+urls = list(set(re.findall(r'https://mmbiz\.qpic\.cn/[^\s\)\"]+', a['body_zh'])))
+print('\n'.join(urls))
+" > /tmp/wechat_imgs.txt
 
-  new_url=$(curl -s -X POST "https://elsewhere.news/api/upload" \
-    -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
-    -F "file=@/tmp/img_temp.jpg" | python3 -c "import json,sys; print(json.load(sys.stdin).get('url',''))")
+# Download each locally and re-upload
+if [ -s /tmp/wechat_imgs.txt ]; then
+  while IFS= read -r img_url; do
+    curl -s -o /tmp/img_rescue.jpg "$img_url" \
+      -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" \
+      -H "Referer: https://mp.weixin.qq.com/"
 
-  # Replace original URL with new URL in /tmp/article.json
-  if [ -n "$new_url" ]; then
-    python3 -c "
+    new_url=$(curl -s -X POST "https://elsewhere.news/api/upload" \
+      -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
+      -F "file=@/tmp/img_rescue.jpg" | python3 -c "import json,sys; print(json.load(sys.stdin).get('url',''))")
+
+    if [ -n "$new_url" ]; then
+      python3 -c "
 import json
 with open('/tmp/article.json') as f: a = json.load(f)
 a['body_zh'] = a['body_zh'].replace('$img_url', '$new_url')
 with open('/tmp/article.json', 'w') as f: json.dump(a, f, ensure_ascii=False)
 "
-  fi
-done
+    fi
+  done < /tmp/wechat_imgs.txt
+fi
 ```
-
-Only do this if `failed_images` is present and non-empty. Skip images that still fail after local download.
 
 ### Step 4: Confirm
 
@@ -414,7 +421,35 @@ curl -s -X POST "https://elsewhere.news/api/articles" \
 
 Fill in `ENGLISH_TITLE` and `ENGLISH_EXCERPT` with your own translations before running.
 
-**3d. Handle failed images** (same as single import — only if `failed_images` is present)
+**3d. Rescue remaining WeChat images** (always run before publishing)
+
+```bash
+python3 -c "
+import json, re
+with open('/tmp/article_N.json') as f: a = json.load(f)
+urls = list(set(re.findall(r'https://mmbiz\.qpic\.cn/[^\s\)\"]+', a['body_zh'])))
+print('\n'.join(urls))
+" > /tmp/wechat_imgs_N.txt
+
+if [ -s /tmp/wechat_imgs_N.txt ]; then
+  while IFS= read -r img_url; do
+    curl -s -o /tmp/img_rescue.jpg "$img_url" \
+      -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" \
+      -H "Referer: https://mp.weixin.qq.com/"
+    new_url=$(curl -s -X POST "https://elsewhere.news/api/upload" \
+      -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
+      -F "file=@/tmp/img_rescue.jpg" | python3 -c "import json,sys; print(json.load(sys.stdin).get('url',''))")
+    if [ -n "$new_url" ]; then
+      python3 -c "
+import json
+with open('/tmp/article_N.json') as f: a = json.load(f)
+a['body_zh'] = a['body_zh'].replace('$img_url', '$new_url')
+with open('/tmp/article_N.json', 'w') as f: json.dump(a, f, ensure_ascii=False)
+"
+    fi
+  done < /tmp/wechat_imgs_N.txt
+fi
+```
 
 **3e. Log result**
 
