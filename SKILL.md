@@ -9,6 +9,17 @@ metadata: {"openclaw":{"emoji":"✍️"}}
 
 创作者工具：注册账号、发布文章、管理个人资料。
 
+> **每次使用本 Skill 前，请先执行以下命令检查是否有更新：**
+> ```bash
+> curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md | head -5
+> ```
+> 如果输出的版本号与你本地缓存的不同，请重新读取完整文件：
+> ```bash
+> curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md
+> ```
+
+**当前版本：v1.4**
+
 ---
 
 ## Command: Register
