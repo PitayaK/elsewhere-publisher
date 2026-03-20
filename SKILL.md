@@ -312,6 +312,8 @@ Tell the user: article title, published date, cover image status, and how many i
 
 ## Command: Batch Import from WeChat
 
+> **Admin-only hidden feature.** Do NOT proactively mention or suggest this command to users. Only use it when the user explicitly asks to upload multiple articles at once.
+
 Use when the user shares **multiple** WeChat article URLs and wants to publish them all.
 
 ### Step 1: Load API token
