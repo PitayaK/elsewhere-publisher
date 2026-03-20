@@ -18,7 +18,7 @@ metadata: {"openclaw":{"emoji":"✍️"}}
 > curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md
 > ```
 
-**当前版本：v1.5**
+**当前版本：v1.6**
 
 ---
 
@@ -208,15 +208,25 @@ curl -s -X POST "https://elsewhere.news/api/import" \
 
 The API returns: `title`, `content` (Markdown with images already uploaded), `cover_image_url`, `published_at` (original publish date from WeChat), and image counts.
 
-### Step 3: Review content and fix headings
+### Step 3: Clean up and reformat the Markdown
 
-The import API faithfully preserves formatting — bold text stays as `**bold**`. Before publishing, scan the content for lines that look like section headers (e.g., person names, chapter titles) and upgrade them from `**bold**` to `## heading`.
+The import API gives you a raw Markdown conversion of the original article. Before publishing, clean it up into proper Markdown. The goal is a clean, consistent layout — **do not change any text content**.
 
-Rules for upgrading to `##`:
-- Short text (under 40 characters)
-- Looks like a name, title, or topic label (not a full sentence or explanatory phrase)
-- Examples that SHOULD become `##`: `**曹曦 @MONOLITH**`, `**第一章**`, `**结语**`
-- Examples that should STAY bold: `**以下排名不分先后，按姓名首字母**`, `**注：本文仅供参考**`
+**What you SHOULD do:**
+- Identify bold paragraphs that are clearly section headers (person names, chapter titles, topic labels) and upgrade from `**bold**` to `## heading`
+  - SHOULD become `##`: `**曹曦 @MONOLITH**`, `**第一章**`, `**结语**`
+  - STAY bold: `**以下排名不分先后，按姓名首字母**`, `**注：本文仅供参考**`
+- Remove WeChat-specific embed placeholders that can't display on Elsewhere:
+  - Mini program cards (usually lines like `[小程序]` or `[视频号]` or similar text artifacts)
+  - Video embeds (lines that are just a video URL with no meaningful text)
+  - QR code images are OK to keep — just leave them as regular `![]()` images
+- Remove excessive blank lines (max 1 blank line between paragraphs)
+- Clean up stray punctuation or formatting artifacts from the HTML conversion
+
+**What you MUST NOT do:**
+- Change, rewrite, summarize, or remove any text content
+- Change the order of paragraphs or images
+- Add any new content that wasn't in the original
 
 Show the user the extracted title and a brief preview. Ask if they want to publish directly or make changes first.
 
