@@ -18,7 +18,7 @@ metadata: {"openclaw":{"emoji":"✍️"}}
 > curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md
 > ```
 
-**当前版本：v1.4**
+**当前版本：v1.5**
 
 ---
 
@@ -266,6 +266,33 @@ curl -s -X POST "https://elsewhere.news/api/articles" \
 ```
 
 **CRITICAL**: Always use the `content` field from the import API directly as `body_zh`. Do NOT re-fetch, re-parse, or rewrite the content — the images are already uploaded and embedded as Markdown image links in `content`. Rewriting it will break all images.
+
+**If the response contains `failed_images`** (images blocked by anti-hotlink server-side), download and re-upload them locally:
+
+```bash
+# For each URL in failed_images, download locally and upload to Elsewhere
+for img_url in <failed_image_urls>; do
+  curl -s -o /tmp/img_temp.jpg "$img_url" \
+    -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" \
+    -H "Referer: https://mp.weixin.qq.com/"
+
+  new_url=$(curl -s -X POST "https://elsewhere.news/api/upload" \
+    -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
+    -F "file=@/tmp/img_temp.jpg" | python3 -c "import json,sys; print(json.load(sys.stdin).get('url',''))")
+
+  # Replace original URL with new URL in /tmp/article.json
+  if [ -n "$new_url" ]; then
+    python3 -c "
+import json
+with open('/tmp/article.json') as f: a = json.load(f)
+a['body_zh'] = a['body_zh'].replace('$img_url', '$new_url')
+with open('/tmp/article.json', 'w') as f: json.dump(a, f, ensure_ascii=False)
+"
+  fi
+done
+```
+
+Only do this if `failed_images` is present and non-empty. Skip images that still fail after local download.
 
 ### Step 4: Confirm
 
