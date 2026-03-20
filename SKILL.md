@@ -18,7 +18,7 @@ metadata: {"openclaw":{"emoji":"✍️"}}
 > curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md
 > ```
 
-**当前版本：v1.7**
+**当前版本：v1.8**
 
 ---
 
@@ -213,9 +213,37 @@ The API returns: `title`, `content` (Markdown with images already uploaded), `co
 The import API gives you a raw Markdown conversion of the original article. Before publishing, clean it up into proper Markdown. The goal is a clean, consistent layout — **do not change any text content**.
 
 **What you SHOULD do:**
-- Identify bold paragraphs that are clearly section headers (person names, chapter titles, topic labels) and upgrade from `**bold**` to `## heading`
-  - SHOULD become `##`: `**曹曦 @MONOLITH**`, `**第一章**`, `**结语**`
-  - STAY bold: `**以下排名不分先后，按姓名首字母**`, `**注：本文仅供参考**`
+
+**① Heading detection**
+
+The import API already converts large-font-size elements to `##` / `###` automatically. Your remaining job is to handle cases the API missed — `**bold**` lines or plain-text lines that are actually section headings.
+
+**Step 1 — Understand the article structure first.** Count how many heading candidates you see (standalone short bold lines, or short plain-text lines that look like labels/titles):
+- **2–6 candidates, each with substantial content** → "chapter" article → use `##`
+- **7+ candidates, each with short content** (parallel list of people, companies, topics) → use `###`
+- **Clear two-level hierarchy** → main chapters `##`, sub-labels inside them `###`
+
+**Step 2 — Identify candidates.** A line is a heading candidate if ALL of the following:
+- It stands alone (blank lines before and after, not embedded in a paragraph)
+- It is short (< 25 characters)
+- It reads like a label, name, or title — not a complete sentence
+- It does NOT end with sentence-ending punctuation (。！？…)
+
+> Both `**bold**` and plain-text standalone lines can be heading candidates.
+
+**Step 3 — Assign level** based on article type from Step 1, then convert:
+- `**曹曦 @MONOLITH**` in a 15-person parallel list → `### 曹曦 @MONOLITH`
+- `**第一章**` in a 4-chapter narrative → `## 第一章`
+- `**一个决定**` as a lone section break → `## 一个决定`
+- Only 1–2 headings in the whole article → always `##`
+- Unsure → default to `##`
+
+**Step 4 — Do NOT promote these:**
+- `**以下排名不分先后，按姓名首字母**` ← annotation/note (full sentence)
+- `**刘旌：你在红杉待了14年，为什么最终决定离开？**` ← dialogue question (has speaker colon + ends with ？)
+- `**郭山汕：**后面跟着回答内容` ← speaker name + answer in one line
+- Also: if the API already marked something `##`/`###` but it looks like an annotation rather than a section label, demote it back to bold or plain text.
+
 - Remove WeChat-specific embed placeholders that can't display on Elsewhere:
   - Mini program cards (usually lines like `[小程序]` or `[视频号]` or similar text artifacts)
   - Video embeds (lines that are just a video URL with no meaningful text)
