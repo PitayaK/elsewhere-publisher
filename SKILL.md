@@ -145,13 +145,18 @@ URL-friendly, lowercase, hyphenated. Use English title if available, otherwise r
 
 Write JSON payload to temp file:
 
+Translate the title and excerpt to English yourself before writing the JSON. For the body, translate it yourself if it's under ~3000 characters; omit `body_en` if longer.
+
 ```bash
 cat > /tmp/article.json << 'JSONEOF'
 {
   "title_zh": "中文标题",
+  "title_en": "English Title",
   "slug": "the-slug",
   "excerpt_zh": "中文摘要",
+  "excerpt_en": "English excerpt",
   "body_zh": "Full article body in Markdown",
+  "body_en": "Full article body in English (omit if too long)",
   "cover_image_url": "https://...uploaded-cover-url..."
 }
 JSONEOF
@@ -205,7 +210,13 @@ Rules for upgrading to `##`:
 
 Show the user the extracted title and a brief preview. Ask if they want to publish directly or make changes first.
 
-If ready to publish, save the result to a temp file and publish:
+If ready to publish:
+
+**Step 3a: Translate title and excerpt yourself**
+
+Translate the title and excerpt to English yourself (do not call any API). For the body, translate it yourself if it's under ~3000 characters; if it's longer, leave `body_en` empty and it will be handled by a background translation service.
+
+**Step 3b: Save and publish**
 
 ```bash
 # Save import result
@@ -222,15 +233,22 @@ title = r['title']
 content = r['content']  # Use this EXACTLY — images are already uploaded
 cover = r.get('cover_image_url', '')
 pub = r.get('published_at', '')
-# Generate slug from title (romanize or use timestamp)
 slug = re.sub(r'[^a-z0-9]+', '-', title.lower())[:50].strip('-') or f'article-{int(__import__(\"time\").time())}'
-# Excerpt: first 100 chars of content
 excerpt = content[:100].replace('\n', ' ').strip()
 article = {'title_zh': title, 'slug': slug, 'excerpt_zh': excerpt, 'body_zh': content, 'cover_image_url': cover, 'published_at': pub}
 json.dump(article, open('/tmp/article.json', 'w'), ensure_ascii=False)
 print('slug:', slug)
 "
+```
 
+Then open `/tmp/article.json`, add your translations:
+- `title_en`: your English translation of the title
+- `excerpt_en`: your English translation of the excerpt
+- `body_en`: your English translation of the body (omit if too long)
+
+Then publish:
+
+```bash
 curl -s -X POST "https://elsewhere.news/api/articles" \
   -H "Authorization: Bearer $ELSEWHERE_API_TOKEN" \
   -H "Content-Type: application/json" \
@@ -299,7 +317,7 @@ Note: Avatar upload is only available in the GUI dashboard (https://elsewhere.ne
 
 - Registration links expire in 24 hours; each invite code is single-use
 - Articles are published directly (no draft step)
-- Only fill Chinese fields (title_zh, excerpt_zh, body_zh). English translation is handled separately
+- Always include `title_en` and `excerpt_en` (translate yourself). Include `body_en` if the body is under ~3000 characters; omit if longer
 - Always write JSON to temp file and use `curl -d @file` to avoid shell escaping issues
 - After registration, human can log into GUI dashboard at `https://elsewhere.news/dashboard/login`
 - The API token never expires. If compromised, the human can regenerate it from the dashboard.
