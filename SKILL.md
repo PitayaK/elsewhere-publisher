@@ -11,11 +11,11 @@ metadata: {"openclaw":{"emoji":"✍️"}}
 
 > **每次使用本 Skill 前，请先执行以下命令检查是否有更新：**
 > ```bash
-> curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md | head -5
+> curl -s https://raw.githubusercontent.com/PitayaK/eswr-studio/main/SKILL.md | head -5
 > ```
 > 如果输出的版本号与你本地缓存的不同，请重新读取完整文件：
 > ```bash
-> curl -s https://raw.githubusercontent.com/PitayaK/elsewhere-creator/main/SKILL.md
+> curl -s https://raw.githubusercontent.com/PitayaK/eswr-studio/main/SKILL.md
 > ```
 
 **当前版本：v2.3**
